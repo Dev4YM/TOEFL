@@ -23,6 +23,7 @@
             ];
 
             const $tableBody = $('#vocab-table tbody');
+            const $logsTableBody = $('#logs-table tbody');
             let editingIndex = -1;
 
             function loadEntries() {
@@ -32,6 +33,23 @@
 
             function saveEntries(entries) {
                 localStorage.setItem('vocabEntries', JSON.stringify(entries));
+            }
+
+            function loadLogs() {
+                const logs = JSON.parse(localStorage.getItem('activityLogs')) || [];
+                return logs;
+            }
+
+            function saveLogs(logs) {
+                localStorage.setItem('activityLogs', JSON.stringify(logs));
+            }
+
+            function logActivity(action, entry) {
+                const logs = loadLogs();
+                const timestamp = new Date().toLocaleString();
+                logs.push({ action, entry, timestamp });
+                saveLogs(logs);
+                renderLogsTable();
             }
 
             function calculateStatus(entry) {
@@ -57,6 +75,21 @@
                         </tr>
                     `);
                     $tableBody.append($row);
+                });
+            }
+
+            function renderLogsTable() {
+                $logsTableBody.empty();
+                const logs = loadLogs();
+                logs.forEach((log, index) => {
+                    const $row = $(`
+                        <tr>
+                            <td>${log.action}</td>
+                            <td>${log.entry.word}</td>
+                            <td>${log.timestamp}</td>
+                        </tr>
+                    `);
+                    $logsTableBody.append($row);
                 });
             }
 
@@ -106,10 +139,14 @@
 
                 if (entryIndex === '') {
                     // Add new entry
-                    entries.push({ word, meaning, arabic, spelling });
+                    const newEntry = { word, meaning, arabic, spelling };
+                    entries.push(newEntry);
+                    logActivity('Added', newEntry);
                 } else {
                     // Edit existing entry
-                    entries[entryIndex] = { word, meaning, arabic, spelling };
+                    const updatedEntry = { word, meaning, arabic, spelling };
+                    entries[entryIndex] = updatedEntry;
+                    logActivity('Edited', updatedEntry);
                 }
 
                 saveEntries(entries);
@@ -125,13 +162,15 @@
             $tableBody.on('click', '.delete-btn', function() {
                 const index = $(this).data('index');
                 let entries = loadEntries();
-                entries.splice(index, 1);
+                const deletedEntry = entries.splice(index, 1)[0];
+                logActivity('Deleted', deletedEntry);
                 saveEntries(entries);
                 renderTable();
             });
 
             // Initial render
             renderTable();
+            renderLogsTable();
         });
     </script>
 </head>
@@ -153,6 +192,21 @@
                 </thead>
                 <tbody>
                     <!-- Entries will be added here -->
+                </tbody>
+            </table>
+        </div>
+        <h2 class="mb-4">Activity Log</h2>
+        <div id="log-container" class="mb-4" style="max-height: 75%; overflow: auto;">
+            <table id="logs-table" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Word</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Logs will be added here -->
                 </tbody>
             </table>
         </div>
