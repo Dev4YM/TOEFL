@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vocabulary List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script defer>
+        $(document).ready(function() {
+            const defaultEntries = [
+                { word: 'cognizant', meaning: true, arabic: true, spelling: false },
+                { word: 'constrain', meaning: true, arabic: true, spelling: true },
+                { word: 'contemplate', meaning: false, arabic: true, spelling: false },
+                { word: 'continuously', meaning: true, arabic: false, spelling: false },
+                { word: 'contradict', meaning: false, arabic: false, spelling: false },
+                { word: 'contribute', meaning: false, arabic: false, spelling: true },
+                { word: 'convey', meaning: false, arabic: false, spelling: true },
+                { word: 'copious', meaning: true, arabic: true, spelling: false },
+                { word: 'core', meaning: false, arabic: false, spelling: true },
+                { word: 'corrode', meaning: false, arabic: false, spelling: true }
+            ];
+
+            const $tableBody = $('#vocab-table tbody');
+            let editingIndex = -1;
+
+            function loadEntries() {
+                const entries = JSON.parse(localStorage.getItem('vocabEntries')) || defaultEntries;
+                return entries;
+            }
+
+            function saveEntries(entries) {
+                localStorage.setItem('vocabEntries', JSON.stringify(entries));
+            }
+
+            function calculateStatus(entry) {
+                return (entry.meaning && entry.arabic && entry.spelling) ? '✅' : '❌';
+            }
+
+            function renderTable() {
+                $tableBody.empty();
+                const entries = loadEntries();
+                entries.forEach((entry, index) => {
+                    const status = calculateStatus(entry);
+                    const $row = $(`
+                        <tr>
+                            <td>${entry.word}</td>
+                            <td>${entry.meaning}</td>
+                            <td>${entry.arabic}</td>
+                            <td>${entry.spelling}</td>
+                            <td>${status}</td>
+                            <td>
+                                <button class="btn btn-warning edit-btn" data-index="${index}" data-bs-toggle="modal" data-bs-target="#form-container">Edit</button>
+                                <button class="btn btn-danger delete-btn" data-index="${index}">Delete</button>
+                            </td>
+                        </tr>
+                    `);
+                    $tableBody.append($row);
+                });
+            }
+
+            function showForm(isEdit = false, entryIndex = -1) {
+                if (isEdit) {
+                    const entries = loadEntries();
+                    const entry = entries[entryIndex];
+                    $('#word').val(entry.word);
+                    $('#meaning').prop('checked', entry.meaning);
+                    $('#arabic').prop('checked', entry.arabic);
+                    $('#spelling').prop('checked', entry.spelling);
+                    $('#entry-id').val(entryIndex);
+                    $('#form-title').text('Edit Entry');
+                    $('#submitForm').text('Save');
+                } else {
+                    $('#word').val('');
+                    $('#meaning').prop('checked', false);
+                    $('#arabic').prop('checked', false);
+                    $('#spelling').prop('checked', false);
+                    $('#entry-id').val('');
+                    $('#form-title').text('Add Entry');
+                    $('#submitForm').text('Add');
+                }
+                $('#form-container').show();
+            }
+
+            function hideForm() {
+                $('#form-container').hide();
+            }
+
+            $('#add-entry').click(function() {
+                showForm();
+            });
+
+            $('#cancel').click(function() {
+                hideForm();
+            });
+
+            $('#entry-form').submit(function(event) {
+                event.preventDefault();
+                const word = $('#word').val();
+                const meaning = $('#meaning').is(':checked');
+                const arabic = $('#arabic').is(':checked');
+                const spelling = $('#spelling').is(':checked');
+                const entryIndex = $('#entry-id').val();
+                let entries = loadEntries();
+
+                if (entryIndex === '') {
+                    // Add new entry
+                    entries.push({ word, meaning, arabic, spelling });
+                } else {
+                    // Edit existing entry
+                    entries[entryIndex] = { word, meaning, arabic, spelling };
+                }
+
+                saveEntries(entries);
+                renderTable();
+                hideForm();
+            });
+
+            $tableBody.on('click', '.edit-btn', function() {
+                const index = $(this).data('index');
+                showForm(true, index);
+            });
+
+            $tableBody.on('click', '.delete-btn', function() {
+                const index = $(this).data('index');
+                let entries = loadEntries();
+                entries.splice(index, 1);
+                saveEntries(entries);
+                renderTable();
+            });
+
+            // Initial render
+            renderTable();
+        });
+    </script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Vocabulary List</h1>
+        <div id="list-container" class="mb-4" style="max-height: 35vh; overflow: auto;">
+            <table id="vocab-table" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        <th>Meaning</th>
+                        <th>Arabic</th>
+                        <th>Spelling</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Entries will be added here -->
+                </tbody>
+            </table>
+        </div>
+        <button type="button" id="add-entry" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#form-container">Add Entry</button>
+        <div class="modal fade" id="form-container" tabindex="-1" aria-labelledby="FormLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content px-5">
+                    <div class="modal-header">
+                        <h2 id="form-title" class="mb-3">Add Entry</h2>
+                    </div>
+                    <form id="entry-form">
+                        <div class="mb-3">
+                            <label for="word" class="form-label">Word:</label>
+                            <input type="text" id="word" name="word" class="form-control" required />
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" id="meaning" name="meaning" class="form-check-input" />
+                            <label for="meaning" class="form-check-label">Meaning</label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" id="arabic" name="arabic" class="form-check-input" />
+                            <label for="arabic" class="form-check-label">Arabic</label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" id="spelling" name="spelling" class="form-check-input" />
+                            <label for="spelling" class="form-check-label">Spelling</label>
+                        </div>
+                        <input type="hidden" id="entry-id" />
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success" id="submitForm" data-bs-dismiss="modal">Add</button>
+                            <button type="button" id="cancel" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
