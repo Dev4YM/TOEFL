@@ -138,7 +138,8 @@
 <body>
     <div class="container mt-4">
         <h1 class="mb-4">Vocabulary List</h1>
-        <div id="list-container" class="mb-4" style="max-height: 35vh; overflow: auto;">
+        <button type="button" id="add-entry" class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#form-container">Add Entry</button>
+        <div id="list-container" class="mb-4" style="max-height: 75%; overflow: auto;">
             <table id="vocab-table" class="table table-striped">
                 <thead>
                     <tr>
@@ -155,7 +156,6 @@
                 </tbody>
             </table>
         </div>
-        <button type="button" id="add-entry" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#form-container">Add Entry</button>
         <div class="modal fade" id="form-container" tabindex="-1" aria-labelledby="FormLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content px-5">
