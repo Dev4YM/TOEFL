@@ -65,6 +65,7 @@
                     const status = calculateStatus(entry);
                     const $row = $(`
                         <tr data-order="${entry.order}">
+                            <td class="drag-handle" style="cursor: move;">&#x2630;</td>
                             <td>${entry.word} <span class="badge bg-secondary">${entry.counter}</span></td>
                             <td>${entry.meaning}</td>
                             <td>${entry.arabic}</td>
@@ -79,6 +80,7 @@
                     $tableBody.append($row);
                 });
                 $("#vocab-table tbody").sortable({
+                    handle: '.drag-handle',
                     update: function(event, ui) {
                         saveOrder();
                     }
@@ -99,6 +101,7 @@
             function renderLogsTable() {
                 $logsTableBody.empty();
                 const logs = loadLogs();
+                logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 logs.forEach((log, index) => {
                     const $row = $(`
                         <tr>
@@ -189,7 +192,7 @@
 
             $logsTableBody.on('click', '.restore-btn', function() {
                 const index = $(this).data('index');
-                let logs = loadLogs();
+                const logs = loadLogs();
                 const logEntry = logs[index];
                 const restoredEntry = logEntry.entry;
                 let entries = loadEntries();
@@ -208,6 +211,9 @@
         .ui-sortable-helper {
             display: table;
         }
+        .drag-handle {
+            cursor: move;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +224,7 @@
             <table id="vocab-table" class="table table-striped">
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Word</th>
                         <th>Meaning</th>
                         <th>Arabic</th>
